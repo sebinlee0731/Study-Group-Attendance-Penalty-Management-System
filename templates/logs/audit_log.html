@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold">감사 로그</h2>
+        <p class="text-muted mb-0">출결, 벌금, 납부, 이의 신청 처리 내역을 추적합니다.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <p class="text-muted mb-1">전체 로그</p>
+                <h2 class="fw-bold">{{ logs|length }}</h2>
+                <span class="badge bg-dark">Audit</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">수정 이력 로그</h5>
+            <span class="text-muted small">Audit Log Table</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>행위자</th>
+                    <th>액션</th>
+                    <th>대상 테이블</th>
+                    <th>대상 ID</th>
+                    <th>설명</th>
+                    <th>사유</th>
+                    <th>생성일</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.id }}</td>
+
+                    <td class="fw-semibold">
+                        {% if log.actor %}
+                            {{ log.actor.username }}
+                        {% else %}
+                            SYSTEM
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if log.action == 'CREATE' %}
+                            <span class="badge bg-success">CREATE</span>
+                        {% elif log.action == 'UPDATE' %}
+                            <span class="badge bg-primary">UPDATE</span>
+                        {% elif log.action == 'DELETE' %}
+                            <span class="badge bg-danger">DELETE</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ log.action }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <span class="badge bg-light text-dark border">
+                            {{ log.target_table }}
+                        </span>
+                    </td>
+
+                    <td>{{ log.target_id }}</td>
+
+                    <td style="max-width: 260px;">
+                        {{ log.description }}
+                    </td>
+
+                    <td>
+                        {% if log.reason %}
+                            {{ log.reason }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-muted">
+                        {{ log.created_at }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        감사 로그가 없습니다.
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

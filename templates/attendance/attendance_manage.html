@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold">출결 관리</h2>
+        <p class="text-muted mb-0">스터디 회차별 출결을 입력하고 벌금을 자동 정산합니다.</p>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="fw-bold mb-3">스터디 일정 선택</h5>
+
+        <form method="get">
+            <select name="schedule_id" class="form-select" onchange="this.form.submit()">
+                <option value="">일정을 선택하세요</option>
+
+                {% for schedule in schedules %}
+                    <option value="{{ schedule.id }}"
+                        {% if selected_schedule and selected_schedule.id == schedule.id %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ schedule.title }} | {{ schedule.scheduled_at }} | {{ schedule.location }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+{% if selected_schedule %}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <p class="text-muted mb-1">선택 회차</p>
+                <h4 class="fw-bold">{{ selected_schedule.title }}</h4>
+                <span class="badge bg-primary">Schedule</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <p class="text-muted mb-1">장소</p>
+                <h4 class="fw-bold">{{ selected_schedule.location }}</h4>
+                <span class="badge bg-secondary">Location</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <p class="text-muted mb-1">출결 대상</p>
+                <h4 class="fw-bold">{{ members|length }}명</h4>
+                <span class="badge bg-success">Members</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5 class="fw-bold mb-3">출결 입력</h5>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <input type="hidden" name="schedule_id" value="{{ selected_schedule.id }}">
+
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>팀원</th>
+                    <th>역할</th>
+                    <th>출결 상태</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for member in members %}
+                <tr>
+                    <td class="fw-semibold">{{ member.user.username }}</td>
+                    <td>
+                        {% if member.role == 'leader' %}
+                            <span class="badge bg-dark">팀장</span>
+                        {% else %}
+                            <span class="badge bg-secondary">팀원</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width: 260px;">
+                        <select name="status_{{ member.user.id }}" class="form-select">
+                            <option value="present">출석</option>
+                            <option value="late">지각</option>
+                            <option value="absent">결석</option>
+                        </select>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted">
+                        출결 대상 팀원이 없습니다.
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">
+                    출결 저장 및 벌금 자동 정산
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% else %}
+
+<div class="alert alert-secondary">
+    스터디 일정을 선택하면 출결 입력 화면이 표시됩니다.
+</div>
+
+{% endif %}
+
+{% endblock %}

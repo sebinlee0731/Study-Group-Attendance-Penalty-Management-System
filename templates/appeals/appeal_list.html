@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold">이의 신청</h2>
+        <p class="text-muted mb-0">벌금 또는 출결에 대한 이의 신청을 접수하고 처리합니다.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">이의 신청 작성</h5>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+
+                    <div class="mb-3">
+                        <label class="form-label">벌금 정산 선택</label>
+                        <select name="settlement_id" class="form-select" required>
+                            {% for settlement in settlements %}
+                                <option value="{{ settlement.id }}">
+                                    {{ settlement.user.username }} |
+                                    {{ settlement.amount }}원 |
+                                    {{ settlement.reason }}
+                                </option>
+                            {% empty %}
+                                <option value="">신청 가능한 벌금이 없습니다</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">이의 신청 사유</label>
+                        <textarea
+                            name="reason"
+                            class="form-control"
+                            rows="6"
+                            placeholder="예: 실제로는 출석했는데 지각으로 처리되었습니다."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        이의 신청 제출
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">이의 신청 목록</h5>
+                    <span class="text-muted small">Appeal Management</span>
+                </div>
+
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>신청자</th>
+                        <th>사유</th>
+                        <th>상태</th>
+                        <th>검토 의견</th>
+                        <th>처리</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for objection in objections %}
+                    <tr>
+                        <td>{{ objection.id }}</td>
+
+                        <td class="fw-semibold">
+                            {{ objection.user.username }}
+                        </td>
+
+                        <td style="max-width: 220px;">
+                            {{ objection.reason }}
+                        </td>
+
+                        <td>
+                            {% if objection.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">대기</span>
+                            {% elif objection.status == 'approved' %}
+                                <span class="badge bg-success">승인</span>
+                            {% elif objection.status == 'rejected' %}
+                                <span class="badge bg-danger">거절</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ objection.status }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if objection.review_note %}
+                                {{ objection.review_note }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if objection.status == 'pending' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="process">
+                                    <input type="hidden" name="objection_id" value="{{ objection.id }}">
+                                    <input type="hidden" name="status" value="approved">
+                                    <button class="btn btn-sm btn-success">
+                                        승인
+                                    </button>
+                                </form>
+
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="process">
+                                    <input type="hidden" name="objection_id" value="{{ objection.id }}">
+                                    <input type="hidden" name="status" value="rejected">
+                                    <button class="btn btn-sm btn-danger">
+                                        거절
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-muted">처리 완료</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            등록된 이의 신청이 없습니다.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
